@@ -1,5 +1,5 @@
 __author__ = 'pangboww'
-NUM_EMAIL = 200
+NUM_EMAIL = 1000
 
 import csv
 from faker import Faker
