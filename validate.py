@@ -40,10 +40,10 @@ def read_email(amount):
     return mail_list
 
 
-def write_result(result):
-    for i, j in enumerate(result):
-        if j == True:
-            out_file.write(validate_result[i] + "\n")
+def write_result(_emails, _result):
+    for i, j in enumerate(_result):
+        if j:
+            out_file.write(_emails[i] + "\n")
 
 
 def execute_thread(_emails):
@@ -60,8 +60,7 @@ threads = execute_thread(emails)
 for t in threads:
     t.join()
 
-
-write_result(validate_result)
+write_result(emails, validate_result)
 end = timeit.timeit()
 time = end - start
 print "Program end"
