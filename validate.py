@@ -9,7 +9,7 @@ AMOUNT = 100
 start = timeit.timeit()
 print "Program start"
 
-in_file = open("name_list", "rb")
+in_file = open("email", "rb")
 out_file = open("valid_mail_list", "wb")
 
 validate_result = [None] * AMOUNT
@@ -41,9 +41,9 @@ def read_email(amount):
 
 
 def write_result(result):
-    print "Size: " + str(len(result))
-    for item in result:
-        out_file.write(str(item)+"\n")
+    for i, j in enumerate(result):
+        if j == True:
+            out_file.write(validate_result[i] + "\n")
 
 
 def execute_thread(_emails):
@@ -59,6 +59,7 @@ emails = read_email(AMOUNT)
 threads = execute_thread(emails)
 for t in threads:
     t.join()
+
 
 write_result(validate_result)
 end = timeit.timeit()
