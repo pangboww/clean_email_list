@@ -22,10 +22,12 @@ def verify_email_in_one_domain(domain, emails):
 
     # SMTP Conversation
     server.connect(mx_record)
+    print "connect to " + mx_record
     server.helo(host)
     server.mail("me@me.com")
     for email in emails:
         code, message = server.rcpt(email)
+        print message
         if code == 250:
             validate_result.append(email)
     server.quit()
@@ -71,7 +73,7 @@ class EmailValidationThread(threading.Thread):
 def execute_thread(emails_by_domain):
     _threads = []
     for i, j in emails_by_domain.iteritems():
-        if i == "gmail.com" or i == "hotmail.com" or i == "yahoo.com":
+        if i == "hotmail.com" or i == "yahoo.com":
             thread = EmailValidationThread(i, j)
             thread.start()
             _threads.append(thread)
