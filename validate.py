@@ -34,7 +34,7 @@ def verify_email_in_one_domain(domain, emails):
 
 
 def read_emails_by_domain():
-    in_file = open("email", "rb")
+    in_file = open("email_to_clean", "rb")
 
     emails = {}
     for item in in_file:
@@ -93,15 +93,15 @@ def execute_thread(emails_by_domain):
                 _threads.append(thread)
     return _threads
 
-# validate_result = []
-# emails_to_verify = read_emails_by_domain()
-# threads = execute_thread(emails_to_verify)
-# for t in threads:
-#     t.join()
-#
-# out_file = open("valid_mail_list", "wb")
-# for i in validate_result:
-#     out_file.write(i + "\n")
+validate_result = []
+emails_to_verify = read_emails_by_domain()
+threads = execute_thread(emails_to_verify)
+for t in threads:
+    t.join()
+
+out_file = open("result", "wb")
+for i in validate_result:
+    out_file.write(i + "\n")
 
 # old = [1,2,3]
 # new = divide_array(old)
