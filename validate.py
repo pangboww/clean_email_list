@@ -69,22 +69,40 @@ class EmailValidationThread(threading.Thread):
 #         if j:
 #             out_file.write(_emails[i] + "\n")
 
+def divide_array(old_array):
+    length = len(old_array)
+    new_array = []
+    size = length / 5
+    i = 0
+    while i < size:
+        sub_array = old_array[i*5:(i+1)*5]
+        new_array.append(sub_array)
+        i += 1
+    sub_array = old_array[i*5:]
+    new_array.append(sub_array)
+    return new_array
 
 def execute_thread(emails_by_domain):
     _threads = []
-    for i, j in emails_by_domain.iteritems():
-        if i == "hotmail.com" or i == "yahoo.com":
-            thread = EmailValidationThread(i, j)
-            thread.start()
-            _threads.append(thread)
+    for domain, emails in emails_by_domain.iteritems():
+        if domain == "hotmail.com" or domain == "yahoo.com":
+            divided_emails = divide_array(emails)
+            for sub_emails_array in divided_emails:
+                thread = EmailValidationThread(domain, sub_emails_array)
+                thread.start()
+                _threads.append(thread)
     return _threads
 
-validate_result = []
-emails_to_verify = read_emails_by_domain()
-threads = execute_thread(emails_to_verify)
-for t in threads:
-    t.join()
+# validate_result = []
+# emails_to_verify = read_emails_by_domain()
+# threads = execute_thread(emails_to_verify)
+# for t in threads:
+#     t.join()
+#
+# out_file = open("valid_mail_list", "wb")
+# for i in validate_result:
+#     out_file.write(i + "\n")
 
-out_file = open("valid_mail_list", "wb")
-for i in validate_result:
-    out_file.write(i + "\n")
+# old = [1,2,3]
+# new = divide_array(old)
+# print new
