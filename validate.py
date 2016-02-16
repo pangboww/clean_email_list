@@ -89,10 +89,11 @@ def divide_array(old_array):
 def execute_thread(emails_by_domain):
     _threads = []
     for domain, emails in emails_by_domain.iteritems():
-        if domain == "hotmail.com" or domain == "yahoo.com":
+        if True or domain == "hotmail.com" or domain == "yahoo.com":
             divided_emails = divide_array(emails)
             for sub_emails_array in divided_emails:
                 thread = EmailValidationThread(mx_record_cache[domain], sub_emails_array)
+                thread.setDaemon(True)
                 thread.start()
                 _threads.append(thread)
 
@@ -122,7 +123,7 @@ socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, proxy_host, proxy_port)
 socks.wrap_module(smtplib)
 threads = execute_thread(emails_to_verify)
 for t in threads:
-    t.join()
+    t.join(20)
 
 out_file = open("result", "wb")
 for i in validate_result:
