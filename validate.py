@@ -3,8 +3,17 @@ __author__ = 'pangboww'
 import threading
 import re
 import socket
+import socks
 import smtplib
 import dns.resolver
+from stem import Signal
+from stem.control import Controller
+
+
+def renew_tor_identity():
+    with Controller.from_port(port=9051) as controller:
+        controller.authenticate(password="pb3133962")
+        controller.signal(Signal.NEWNYM)
 
 
 def verify_email_in_one_domain(domain, emails):
@@ -65,7 +74,7 @@ class EmailValidationThread(threading.Thread):
 
 
 # def write_result(_emails, _result):
-#     for i, j in enumerate(_result):
+# for i, j in enumerate(_result):
 #         if j:
 #             out_file.write(_emails[i] + "\n")
 
@@ -75,12 +84,13 @@ def divide_array(old_array):
     size = length / 5
     i = 0
     while i < size:
-        sub_array = old_array[i*5:(i+1)*5]
+        sub_array = old_array[i * 5:(i + 1) * 5]
         new_array.append(sub_array)
         i += 1
-    sub_array = old_array[i*5:]
+    sub_array = old_array[i * 5:]
     new_array.append(sub_array)
     return new_array
+
 
 def execute_thread(emails_by_domain):
     _threads = []
@@ -91,7 +101,15 @@ def execute_thread(emails_by_domain):
                 thread = EmailValidationThread(domain, sub_emails_array)
                 thread.start()
                 _threads.append(thread)
+
     return _threads
+
+
+proxy_host = "127.0.0.1"
+proxy_port = "9050"
+socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, proxy_host, proxy_port)
+socks.wrapmodule(smtplib)
+
 
 validate_result = []
 emails_to_verify = read_emails_by_domain()
@@ -102,7 +120,3 @@ for t in threads:
 out_file = open("result", "wb")
 for i in validate_result:
     out_file.write(i + "\n")
-
-# old = [1,2,3]
-# new = divide_array(old)
-# print new
