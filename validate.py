@@ -2,7 +2,6 @@ __author__ = 'pangboww'
 
 import threading
 import re
-import socket
 import socks
 import smtplib
 import dns.resolver
@@ -16,14 +15,9 @@ def renew_tor_identity():
         controller.signal(Signal.NEWNYM)
 
 
-def verify_email_in_one_domain(domain, emails):
-    # MX record lookup
-    records = dns.resolver.query(domain, 'MX')
-    mx_record = records[0].exchange
-    mx_record = str(mx_record)
-
+def verify_email_in_one_domain(mx_record, emails):
     # Get local server hostname
-    host = socket.gethostname()
+    host = "bo.com"
 
     # SMTP lib setup (use debug level for full output)
     server = smtplib.SMTP()
@@ -98,22 +92,34 @@ def execute_thread(emails_by_domain):
         if domain == "hotmail.com" or domain == "yahoo.com":
             divided_emails = divide_array(emails)
             for sub_emails_array in divided_emails:
-                thread = EmailValidationThread(domain, sub_emails_array)
+                thread = EmailValidationThread(mx_record_cache[domain], sub_emails_array)
                 thread.start()
                 _threads.append(thread)
 
     return _threads
 
 
+def lookup_mx_record(domain):
+    try:
+        records = dns.resolver.query(domain, 'MX')
+    except:
+        return False
+    mx_record = records[0].exchange
+    return str(mx_record)
+
+mx_record_cache = {}
+validate_result = []
+emails_to_verify = read_emails_by_domain()
+
+print "Resolving mx domain..."
+for i, j in emails_to_verify.iteritems():
+    mx_record_cache[i] = lookup_mx_record(i)
+
+
 proxy_host = "127.0.0.1"
 proxy_port = 9050
 socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, proxy_host, proxy_port)
-socks.wrapmodule(dns.resolver)
-socks.wrapmodule(smtplib)
-
-
-validate_result = []
-emails_to_verify = read_emails_by_domain()
+socks.wrap_module(smtplib)
 threads = execute_thread(emails_to_verify)
 for t in threads:
     t.join()
