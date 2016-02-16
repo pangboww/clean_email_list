@@ -1,67 +1,88 @@
 __author__ = 'pangboww'
 
-from validate_email import validate_email
 import threading
-import timeit
+import re
+import socket
+import smtplib
+import dns.resolver
 
-AMOUNT = 100
 
-start = timeit.timeit()
-print "Program start"
+def verify_email_in_one_domain(domain, emails):
+    # MX record lookup
+    records = dns.resolver.query(domain, 'MX')
+    mx_record = records[0].exchange
+    mx_record = str(mx_record)
 
-in_file = open("email", "rb")
-out_file = open("valid_mail_list", "wb")
+    # Get local server hostname
+    host = socket.gethostname()
 
-validate_result = [None] * AMOUNT
+    # SMTP lib setup (use debug level for full output)
+    server = smtplib.SMTP()
+    server.set_debuglevel(0)
+
+    # SMTP Conversation
+    server.connect(mx_record)
+    server.helo(host)
+    server.mail("me@me.com")
+    for email in emails:
+        code, message = server.rcpt(email)
+        if code == 250:
+            validate_result.append(email)
+    server.quit()
+
+
+def read_emails_by_domain():
+    in_file = open("email", "rb")
+
+    emails = {}
+    for item in in_file:
+        email = item.rstrip()
+        match = re.match('^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,4})$', email)
+        if match:
+            domain = email.split('@')[1]
+            if domain in emails:
+                emails[domain].append(email)
+            else:
+                emails[domain] = []
+                emails[domain].append(email)
+
+    in_file.close()
+    return emails
 
 
 class EmailValidationThread(threading.Thread):
-    def __init__(self, email, index):
+    def __init__(self, domain, emails):
         threading.Thread.__init__(self)
-        self.email = email
-        self.index = index
+        self.domain = domain
+        self.emails = emails
 
     def run(self):
-        print "Starting verify " + str(self.index) + " email: " + str(self.email)
-        is_valid = validate_email(self.email, verify=True)
-        validate_result[self.index] = is_valid
-        print "Exiting " + str(self.index) + "email: " + str(self.email)
+        print "Starting verify " + str(self.domain)
+        verify_email_in_one_domain(self.domain, self.emails)
+        print "Exiting " + str(self.domain)
 
 
-def read_email(amount):
-    mail_list = []
-    i = 0
-    for line in in_file:
-        mail_list.append(line.rstrip())
-        i += 1
-        if i >= amount:
-            break
-
-    return mail_list
+# def write_result(_emails, _result):
+#     for i, j in enumerate(_result):
+#         if j:
+#             out_file.write(_emails[i] + "\n")
 
 
-def write_result(_emails, _result):
-    for i, j in enumerate(_result):
-        if j:
-            out_file.write(_emails[i] + "\n")
-
-
-def execute_thread(_emails):
+def execute_thread(emails_by_domain):
     _threads = []
-    for index, email in enumerate(_emails):
-        thread = EmailValidationThread(email, index)
-        thread.start()
-        _threads.append(thread)
+    for i, j in emails_by_domain.iteritems():
+        if i == "gmail.com" or i == "hotmail.com" or i == "yahoo.com":
+            thread = EmailValidationThread(i, j)
+            thread.start()
+            _threads.append(thread)
     return _threads
 
-
-emails = read_email(AMOUNT)
-threads = execute_thread(emails)
+validate_result = []
+emails_to_verify = read_emails_by_domain()
+threads = execute_thread(emails_to_verify)
 for t in threads:
     t.join()
 
-write_result(emails, validate_result)
-end = timeit.timeit()
-time = end - start
-print "Program end"
-print "Execution time: " + str(time)
+out_file = open("valid_mail_list", "wb")
+for i in validate_result:
+    out_file.write(i + "\n")
