@@ -106,8 +106,9 @@ def execute_thread(emails_by_domain):
 
 
 proxy_host = "127.0.0.1"
-proxy_port = "9050"
+proxy_port = 9050
 socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, proxy_host, proxy_port)
+socks.wrapmodule(dns.resolver)
 socks.wrapmodule(smtplib)
 
 
